@@ -47,8 +47,36 @@ exports.bookList = (req, res, next) => {
 };
 
 //display details about specific book
-exports.bookDetails = (req, res) => {
-  res.send(`Not implemented: book Details: ${req.params.id}`);
+exports.bookDetails = (req, res, next) => {
+  async.parallel(
+    {
+      book: (callback) => {
+        book
+          .findById(req.params.id)
+          .populate("author")
+          .populate("genre")
+          .exec(callback);
+      },
+      book_instance: (callback) => {
+        bookInstance.find({ book: req.params.id }).exec(callback);
+      },
+    },
+    (err, results) => {
+      if (err) {
+        return next(err);
+      }
+      if (results.book == null) {
+        var err = new Error("Book not found");
+        err.status = 404;
+        return next(err);
+      }
+      res.render("book_detail", {
+        title: results.book.title,
+        book: results.book,
+        book_instances: results.book_instance,
+      });
+    }
+  );
 };
 
 exports.createBookOnGet = (req, res) => {
