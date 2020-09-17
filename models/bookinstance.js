@@ -13,7 +13,7 @@ const bookInstanceSchema = new Schema({
   due_back: { type: Date, default: Date.now },
 });
 
-bookInstanceSchema.virtual("url").get(() => {
+bookInstanceSchema.virtual("url").get(function () {
   return "/catalog/bookinstance/" + this._id;
 });
 
