@@ -4,7 +4,6 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 var mongoose = require("mongoose");
-var mongoose = require("mongoose");
 const pass = encodeURIComponent("pass");
 const usr = "usr";
 var mongoDB = `mongodb+srv://${usr}:${pass}@cluster0.fepiv.gcp.mongodb.net/localLibrary?retryWrites=true&w=majority`;
