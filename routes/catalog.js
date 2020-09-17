@@ -5,7 +5,7 @@ let bookController = require("../controllers/bookController");
 let authorController = require("../controllers/authorController");
 let bookInstanceController = require("../controllers/bookInstanceController");
 let genreController = require("../controllers/genreController");
-const genre = require("../models/genre");
+let genre = require("../models/genre");
 
 /*** BOOK ROUTES ***/
 
@@ -104,14 +104,14 @@ router.post(
 
 //get request for bookinstance deletion
 router.get(
-  "bookinstance/:id/delete",
+  "/bookinstance/:id/delete",
   bookInstanceController.bookInstanceDeleteOnGet
 );
 
 //post request for bookinstance deletion
 router.post(
-  "bookinstance/:id/delete",
-  bookInstanceController.bookInstanceDeleteOnPosts
+  "/bookinstance/:id/delete",
+  bookInstanceController.bookInstanceDeleteOnPost
 );
 
 //get request to update bookinstance
