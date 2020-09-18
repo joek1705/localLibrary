@@ -3,6 +3,8 @@ let author = require("../models/author");
 let bookInstance = require("../models/bookinstance");
 let genre = require("../models/genre");
 let async = require("async");
+const { body, validationResult } = require("express-validator/check");
+const { sanitizeBody } = require("express-validator/filter");
 
 exports.index = (req, res) => {
   async.parallel(
@@ -79,13 +81,99 @@ exports.bookDetails = (req, res, next) => {
   );
 };
 
-exports.createBookOnGet = (req, res) => {
-  res.send("Not implemented: book Create On GET");
+exports.createBookOnGet = (req, res, next) => {
+  async.parallel(
+    {
+      authors: (callback) => {
+        author.find(callback);
+      },
+      genres: (callback) => {
+        genre.find(callback);
+      },
+    },
+    (err, results) => {
+      if (err) {
+        return next(err);
+      }
+      res.render("book_form", {
+        title: "Create Book",
+        authors: results.authors,
+        genres: results.genres,
+      });
+    }
+  );
 };
 
-exports.createBookOnPost = (req, res) => {
-  res.send("Not implemented: book Create On POST");
-};
+exports.createBookOnPost = [
+  (req, res, next) => {
+    if (!(req.body.genre instanceof Array)) {
+      if (typeof req.body.genre === "undefined") {
+        req.body.genre = [];
+      } else {
+        req.body.genre = new Array(req.body.genre);
+      }
+    }
+    next();
+  },
+
+  // Validate fields.
+  body("title", "Title must not be empty.").trim().isLength({ min: 1 }),
+  body("author", "Author must not be empty.").trim().isLength({ min: 1 }),
+  body("summary", "Summary must not be empty.").trim().isLength({ min: 1 }),
+  body("isbn", "ISBN must not be empty").trim().isLength({ min: 1 }),
+  sanitizeBody("author").escape(),
+  sanitizeBody("title").escape(),
+  sanitizeBody("isbn").escape(),
+  sanitizeBody("summary").escape(),
+  sanitizeBody("genre.*").escape(),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    let newBook = new book({
+      title: req.body.title,
+      author: req.body.author,
+      summary: req.body.summary,
+      isbn: req.body.isbn,
+      genre: req.body.genre,
+    });
+    if (!errors.isEmpty()) {
+      async.parallel(
+        {
+          authors: (callback) => {
+            author.find(callback);
+          },
+          genres: (callback) => {
+            genre.find(callback);
+          },
+        },
+        (err, results) => {
+          if (err) {
+            return next(err);
+          }
+          for (let i = 0; i < results.genres.length; i++) {
+            if (newBook.genre.indexOf(results.genres[i]._id) > -1) {
+              results.genres[i].checked = "true";
+            }
+          }
+          res.render("book_form", {
+            title: "Create Book",
+            authors: results.authors,
+            genres: results.genres,
+            book: newBook,
+            errors: errors.array(),
+          });
+        }
+      );
+      return;
+    } else {
+      newBook.save((err) => {
+        if (err) {
+          return next(err);
+        }
+        res.redirect(newBook.url);
+      });
+    }
+  },
+];
 
 exports.bookDeleteOnGet = (req, res) => {
   res.send("Not implemented: book Delete On GET");
