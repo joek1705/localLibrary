@@ -1,4 +1,8 @@
 let bookInstance = require("../models/bookinstance");
+let book = require("../models/book");
+const { body, validationResult } = require("express-validator/check");
+const { sanitizeBody } = require("express-validator/filter");
+
 //display list of all book instances
 exports.bookInstanceList = (req, res, next) => {
   bookInstance
@@ -38,13 +42,66 @@ exports.bookInstanceDetails = (req, res, next) => {
     });
 };
 
-exports.createBookInstanceOnGet = (req, res) => {
-  res.send("Not implemented: bookinstance Create On GET");
+exports.createBookInstanceOnGet = (req, res, next) => {
+  book.find({}, "title").exec((err, books) => {
+    if (err) {
+      return next(err);
+    }
+    res.render("bookinstance_form", {
+      title: "Create BookInstance",
+      book_list: books,
+    });
+  });
 };
 
-exports.createbookInstanceOnPost = (req, res) => {
-  res.send("Not implemented: bookinstance Create On POST");
-};
+exports.createbookInstanceOnPost = [
+  // Validate fields.
+  body("book", "Book must be specified").trim().isLength({ min: 1 }),
+  body("imprint", "Imprint must be specified").trim().isLength({ min: 1 }),
+  body("due_back", "Invalid date").optional({ checkFalsy: true }).isISO8601(),
+
+  // Sanitize fields.
+  sanitizeBody("book").escape(),
+  sanitizeBody("imprint").escape(),
+  sanitizeBody("status").trim().escape(),
+  sanitizeBody("due_back").toDate(),
+
+  // Process request after validation and sanitization.
+  (req, res, next) => {
+    const errors = validationResult(req);
+
+    let bookinstance = new bookInstance({
+      book: req.body.book,
+      imprint: req.body.imprint,
+      status: req.body.status,
+      due_back: req.body.due_back,
+    });
+
+    if (!errors.isEmpty()) {
+      Book.find({}, "title").exec((err, books) => {
+        if (err) {
+          return next(err);
+        }
+        res.render("bookinstance_form", {
+          title: "Create BookInstance",
+          book_list: books,
+          selected_book: bookinstance.book._id,
+          errors: errors.array(),
+          bookinstance: bookinstance,
+        });
+      });
+      return;
+    } else {
+      bookinstance.save((err) => {
+        if (err) {
+          return next(err);
+        }
+        // Successful - redirect to new record.
+        res.redirect(bookinstance.url);
+      });
+    }
+  },
+];
 
 exports.bookInstanceDeleteOnGet = (req, res) => {
   res.send("Not implemented: bookinstance Delete On GET");
