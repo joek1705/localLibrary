@@ -5,7 +5,7 @@ const genreSchema = new Schema({
   name: { type: String, minlength: 3, maxlength: 100, required: true },
 });
 
-genreSchema.virtual("url").get(() => {
+genreSchema.virtual("url").get(function () {
   return "/catalog/genre/" + this._id;
 });
 

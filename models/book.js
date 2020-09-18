@@ -9,7 +9,7 @@ const bookSchema = new Schema({
   genre: [{ type: Schema.Types.ObjectId, ref: "genre" }],
 });
 
-bookSchema.virtual("url").get(() => {
+bookSchema.virtual("url").get(function () {
   return "/catalog/book/" + this._id;
 });
 
