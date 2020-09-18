@@ -1,6 +1,8 @@
 let author = require("../models/author");
 let async = require("async");
 let book = require("../models/book");
+const { body, validationResult } = require("express-validator/check");
+const { sanitizeBody } = require("express-validator/filter");
 
 //display list of all authors
 exports.authorList = (req, res, next) => {
@@ -49,12 +51,61 @@ exports.authorDetails = (req, res, next) => {
 };
 
 exports.createAuthorOnGet = (req, res) => {
-  res.send("Not implemented: Author Create On GET");
+  res.render("author_form", { title: "Create Author" });
 };
 
-exports.createAuthorOnPost = (req, res) => {
-  res.send("Not implemented: Author Create On POST");
-};
+exports.createAuthorOnPost = [
+  body("first_name")
+    .isLength({ min: 1 })
+    .trim()
+    .withMessage("You must specify the first name")
+    .isAlphanumeric()
+    .withMessage("First name contains characters that are not alpha-numeric"),
+  body("family_name")
+    .isLength({ min: 1 })
+    .trim()
+    .withMessage("You must specify the family name")
+    .isAlphanumeric()
+    .withMessage("Family name contains characters that are not alpha-numeric"),
+  body("date_of_birth", "Invalid date of birth")
+    .optional({ checkFalsy: true })
+    .isISO8601(),
+  body("date_of_death", "Invalid date of birth")
+    .optional({ checkFalsy: true })
+    .isISO8601(),
+
+  //sanitize fields
+  sanitizeBody("first_name").escape(),
+  sanitizeBody("family_name").escape(),
+  sanitizeBody("date_of_birth").toDate(),
+  sanitizeBody("date_of_death").toDate(),
+
+  //request processing after validation and sanitization
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.render("author_form", {
+        title: "Create Author",
+        Author: req.body,
+        errors: errors.array(),
+      });
+      return;
+    } else {
+      let newAuthor = new author({
+        first_name: req.body.first_name,
+        family_name: req.body.family_name,
+        date_of_birth: req.body.date_of_birth,
+        date_of_death: req.body.date_of_death,
+      });
+      newAuthor.save((err) => {
+        if (err) {
+          return next(err);
+        }
+        res.redirect(newAuthor.url);
+      });
+    }
+  },
+];
 
 exports.authorDeleteOnGet = (req, res) => {
   res.send("Not implemented: Author Delete On GET");
