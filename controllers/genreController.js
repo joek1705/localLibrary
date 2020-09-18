@@ -1,6 +1,7 @@
 let genre = require("../models/genre");
 let async = require("async");
 let book = require("../models/book");
+const validator = require("express-validator");
 
 //display list of all genres
 exports.genreList = (req, res, next) => {
@@ -48,13 +49,43 @@ exports.genreDetails = (req, res, next) => {
   );
 };
 
-exports.createGenreOnGet = (req, res) => {
-  res.send("Not implemented: genre Create On GET");
+exports.createGenreOnGet = (req, res, next) => {
+  res.render("genre_form", { title: "Create Genre" });
 };
 
-exports.createGenreOnPost = (req, res) => {
-  res.send("Not implemented: genre Create On POST");
-};
+exports.createGenreOnPost = [
+  validator.body("name", "Genre name required").trim().isLength({ min: 1 }),
+  validator.sanitize("name").escape(),
+  (req, res, next) => {
+    const errors = validator.validationResult(req);
+    let newGenre = new genre({ name: req.body.name });
+
+    if (!errors.isEmpty()) {
+      res.render("genre_form", {
+        title: "Create Genre",
+        genre: newGenre,
+        errors: errors.array(),
+      });
+      return;
+    } else {
+      genre.findOne({ name: req.body.name }).exec((err, found_genre) => {
+        if (err) {
+          return next(err);
+        }
+        if (found_genre) {
+          res.redirect(found_genre.url);
+        } else {
+          newGenre.save((err) => {
+            if (err) {
+              return next(err);
+            }
+            res.redirect(newGenre.url);
+          });
+        }
+      });
+    }
+  },
+];
 
 exports.genreDeleteOnGet = (req, res) => {
   res.send("Not implemented: genre Delete On GET");
