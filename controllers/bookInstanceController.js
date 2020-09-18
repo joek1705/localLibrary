@@ -1,5 +1,4 @@
 let bookInstance = require("../models/bookinstance");
-
 //display list of all book instances
 exports.bookInstanceList = (req, res, next) => {
   bookInstance
@@ -17,8 +16,26 @@ exports.bookInstanceList = (req, res, next) => {
 };
 
 //display details about specific book instance
-exports.bookInstanceDetails = (req, res) => {
-  res.send(`Not implemented: bookinstance Details: ${req.params.id}`);
+exports.bookInstanceDetails = (req, res, next) => {
+  bookInstance
+    .findById(req.params.id)
+    .populate("book")
+    .exec((err, instance) => {
+      if (err) {
+        return next(err);
+      }
+      if (instance == null) {
+        // No results.
+        var err = new Error("Book copy not found");
+        err.status = 404;
+        return next(err);
+      }
+      // Successful, so render.
+      res.render("bookinstance_detail", {
+        title: "Copy: " + instance.book.title,
+        bookinstance: instance,
+      });
+    });
 };
 
 exports.createBookInstanceOnGet = (req, res) => {
