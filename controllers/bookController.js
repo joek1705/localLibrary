@@ -68,7 +68,7 @@ exports.bookDetails = (req, res, next) => {
         return next(err);
       }
       if (results.book == null) {
-        var err = new Error("Book not found");
+        let err = new Error("Book not found");
         err.status = 404;
         return next(err);
       }
@@ -256,7 +256,7 @@ exports.bookUpdateOnGet = (req, res, next) => {
         return next(err);
       }
       if (results.book == null) {
-        var err = new Error("Book not found");
+        let err = new Error("Book not found");
         err.status = 404;
         return next(err);
       }
@@ -316,7 +316,7 @@ exports.bookUpdateOnPost = [
   (req, res, next) => {
     const errors = validationResult(req);
 
-    var newBook = new book({
+    let newBook = new book({
       title: req.body.title,
       author: req.body.author,
       summary: req.body.summary,

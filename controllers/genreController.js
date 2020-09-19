@@ -146,10 +146,40 @@ exports.genreDeleteOnPost = (req, res) => {
   );
 };
 
-exports.genreUpdateOnGet = (req, res) => {
-  res.send("Not implemented: genre Update On GET");
+exports.genreUpdateOnGet = (req, res, next) => {
+  genre.findById(req.params.id).exec((err, genre) => {
+    if (err) {
+      return next(err);
+    }
+    if (genre == null) {
+      let err = new Error("Couldn't find genre");
+      err.status = 404;
+      return next(err);
+    }
+    res.render("genre_form", { title: "Update Genre", genre: genre });
+  });
 };
 
-exports.genreUpdateOnPost = (req, res) => {
-  res.send("Not implemented: genre Update On POST");
-};
+exports.genreUpdateOnPost = [
+  validator.body("name", "Genre name required").trim().isLength({ min: 1 }),
+  validator.sanitize("name").escape(),
+  (req, res, next) => {
+    const errors = validator.validationResult(req);
+    let newGenre = new genre({ name: req.body.name, _id: req.params.id });
+    if (!errors.isEmpty()) {
+      res.render("genre_form", {
+        title: "Update Genre",
+        genre: newGenre,
+        errors: errors.array(),
+      });
+      return;
+    } else {
+      genre.findByIdAndUpdate(req.params.id, newGenre, {}, (err, new_genre) => {
+        if (err) {
+          return next(err);
+        }
+        res.redirect(new_genre.url);
+      });
+    }
+  },
+];

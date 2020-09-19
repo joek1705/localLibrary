@@ -70,7 +70,7 @@ exports.createAuthorOnPost = [
   body("date_of_birth", "Invalid date of birth")
     .optional({ checkFalsy: true })
     .isISO8601(),
-  body("date_of_death", "Invalid date of birth")
+  body("date_of_death", "Invalid date of death")
     .optional({ checkFalsy: true })
     .isISO8601(),
 
@@ -166,10 +166,70 @@ exports.authorDeleteOnPost = (req, res, next) => {
   );
 };
 
-exports.authorUpdateOnGet = (req, res) => {
-  res.send("Not implemented: Author Update On GET");
+exports.authorUpdateOnGet = (req, res, next) => {
+  author.findById(req.params.id).exec((err, res_author) => {
+    if (err) {
+      return next(err);
+    }
+    if (res_author == null) {
+      let err = new Error("Couldn't find author");
+      err.status = 404;
+      return next(err);
+    }
+    res.render("author_form", { title: "Update Author", Author: res_author });
+  });
 };
 
-exports.authorUpdateOnPost = (req, res) => {
-  res.send("Not implemented: Author Update On POST");
-};
+exports.authorUpdateOnPost = [
+  body("first_name")
+    .isLength({ min: 1 })
+    .trim()
+    .withMessage("You must specify the first name")
+    .isAlphanumeric()
+    .withMessage("First name contains characters that are not alpha-numeric"),
+  body("family_name")
+    .isLength({ min: 1 })
+    .trim()
+    .withMessage("You must specify the family name")
+    .isAlphanumeric()
+    .withMessage("Family name contains characters that are not alpha-numeric"),
+  body("date_of_birth", "Invalid date of birth")
+    .optional({ checkFalsy: true })
+    .isISO8601(),
+  body("date_of_death", "Invalid date of death")
+    .optional({ checkFalsy: true })
+    .isISO8601(),
+
+  //sanitize fields
+  sanitizeBody("first_name").escape(),
+  sanitizeBody("family_name").escape(),
+  sanitizeBody("date_of_birth").toDate(),
+  sanitizeBody("date_of_death").toDate(),
+
+  //request processing after validation and sanitization
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.render("author_form", {
+        title: "Update Author",
+        Author: req.body,
+        errors: errors.array(),
+      });
+      return;
+    } else {
+      let newAuthor = new author({
+        first_name: req.body.first_name,
+        family_name: req.body.family_name,
+        date_of_birth: req.body.date_of_birth,
+        date_of_death: req.body.date_of_death,
+        _id: req.params.id,
+      });
+      author.findByIdAndUpdate(req.params.id, newAuthor, {}, (err, authr) => {
+        if (err) {
+          return next(err);
+        }
+        res.redirect(authr.url);
+      });
+    }
+  },
+];
