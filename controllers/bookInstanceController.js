@@ -2,6 +2,7 @@ let bookInstance = require("../models/bookinstance");
 let book = require("../models/book");
 const { body, validationResult } = require("express-validator/check");
 const { sanitizeBody } = require("express-validator/filter");
+const bookinstance = require("../models/bookinstance");
 
 //display list of all book instances
 exports.bookInstanceList = (req, res, next) => {
@@ -103,12 +104,25 @@ exports.createbookInstanceOnPost = [
   },
 ];
 
-exports.bookInstanceDeleteOnGet = (req, res) => {
-  res.send("Not implemented: bookinstance Delete On GET");
+exports.bookInstanceDeleteOnGet = (req, res, next) => {
+  bookInstance.findById(req.params.id).exec((err, result) => {
+    if (err) {
+      return next(err);
+    }
+    res.render("book_instance_delete", {
+      title: "Delete Bookinstance",
+      instance: result,
+    });
+  });
 };
 
-exports.bookInstanceDeleteOnPost = (req, res) => {
-  res.send("Not implemented: bookinstance Delete On POST");
+exports.bookInstanceDeleteOnPost = (req, res, next) => {
+  bookInstance.findByIdAndRemove(req.body.bookinstanceID, (err) => {
+    if (err) {
+      return next(err);
+    }
+    res.redirect("/catalog/bookinstances");
+  });
 };
 
 exports.bookInstanceUpdateOnGet = (req, res) => {

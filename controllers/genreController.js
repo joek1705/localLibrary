@@ -87,12 +87,63 @@ exports.createGenreOnPost = [
   },
 ];
 
-exports.genreDeleteOnGet = (req, res) => {
-  res.send("Not implemented: genre Delete On GET");
+exports.genreDeleteOnGet = (req, res, next) => {
+  async.parallel(
+    {
+      currGenre: (callback) => {
+        genre.findById(req.params.id).exec(callback);
+      },
+      books: (callback) => {
+        book.find({ genre: req.params.id }).exec(callback);
+      },
+    },
+    (err, results) => {
+      if (err) {
+        return next(err);
+      }
+      if (results.genre === null) {
+        res.redirect("/catalog/genres");
+      }
+      res.render("genre_delete", {
+        title: "Delete Genre",
+        genre: results.currGenre,
+        books: results.books,
+      });
+    }
+  );
 };
 
 exports.genreDeleteOnPost = (req, res) => {
-  res.send("Not implemented: genre Delete On POST");
+  async.parallel(
+    {
+      currGenre: (callback) => {
+        genre.findById(req.params.id).exec(callback);
+      },
+      books: (callback) => {
+        book.find({ genre: req.params.id }).exec(callback);
+      },
+    },
+    (err, results) => {
+      if (err) {
+        return next(err);
+      }
+      if (results.books.length > 0) {
+        res.render("genre_delete", {
+          title: "Delete Genre",
+          genre: results.currGenre,
+          books: results.books,
+        });
+        return;
+      } else {
+        genre.findByIdAndRemove(req.body.genreid, (err) => {
+          if (err) {
+            return next(err);
+          }
+          res.redirect("/catalog/genres");
+        });
+      }
+    }
+  );
 };
 
 exports.genreUpdateOnGet = (req, res) => {

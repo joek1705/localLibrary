@@ -71,10 +71,10 @@ router.get("/genre/create", genreController.createGenreOnGet);
 router.post("/genre/create", genreController.createGenreOnPost);
 
 //get request for deleting genre
-router.get("/genre/delete", genreController.genreDeleteOnGet);
+router.get("/genre/:id/delete", genreController.genreDeleteOnGet);
 
 //post request for deleting genre
-router.post("/genre/delete", genreController.genreDeleteOnPost);
+router.post("/genre/:id/delete", genreController.genreDeleteOnPost);
 
 //get request for updating genre
 router.get("/genre/:id/update", genreController.genreUpdateOnGet);

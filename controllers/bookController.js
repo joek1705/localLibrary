@@ -175,12 +175,63 @@ exports.createBookOnPost = [
   },
 ];
 
-exports.bookDeleteOnGet = (req, res) => {
-  res.send("Not implemented: book Delete On GET");
+exports.bookDeleteOnGet = (req, res, next) => {
+  async.parallel(
+    {
+      currentBook: (callback) => {
+        book.findById(req.params.id).exec(callback);
+      },
+      bookinstances: (callback) => {
+        bookInstance.find({ book: req.params.id }).exec(callback);
+      },
+    },
+    (err, results) => {
+      if (err) {
+        return next(err);
+      }
+      if (results.book === null) {
+        res.redirect("/catalog/book");
+      }
+      res.render("book_delete", {
+        title: "Delete Book",
+        book: results.currentBook,
+        instances: results.bookinstances,
+      });
+    }
+  );
 };
 
-exports.bookDeleteOnPost = (req, res) => {
-  res.send("Not implemented: book Delete On POST");
+exports.bookDeleteOnPost = (req, res, next) => {
+  async.parallel(
+    {
+      currentBook: (callback) => {
+        book.findById(req.params.id).exec(callback);
+      },
+      bookinstances: (callback) => {
+        bookInstance.find({ book: req.params.id }).exec(callback);
+      },
+    },
+    (err, results) => {
+      if (err) {
+        return next(err);
+      }
+      if (results.bookinstances.length > 0) {
+        res.render("book_delete", {
+          title: "Delete Book",
+          book: results.currentBook,
+          instances: results.bookinstances,
+        });
+        return;
+      } else {
+        book.findByIdAndRemove(req.body.bookid, (err) => {
+          if (err) {
+            return next(err);
+          }
+          res.redirect("/catalog/books");
+        });
+      }
+    }
+  );
 };
 
 exports.bookUpdateOnGet = (req, res, next) => {
