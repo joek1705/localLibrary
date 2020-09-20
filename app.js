@@ -5,11 +5,12 @@ var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 var mongoose = require("mongoose");
 const pass = encodeURIComponent("pass");
-const usr = "usr";
+const usr = "user";
 var mongoDB = `mongodb+srv://${usr}:${pass}@cluster0.fepiv.gcp.mongodb.net/localLibrary?retryWrites=true&w=majority`;
-
+var compression = require("compression");
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
+var helmet = require("helmet");
 let catalogRouter = require("./routes/catalog");
 
 var app = express();
@@ -23,9 +24,11 @@ app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
 
 app.use(logger("dev"));
+app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(compression());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
