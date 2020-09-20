@@ -7,7 +7,7 @@ var mongoose = require("mongoose");
 const pass = encodeURIComponent("hHh*F%Xd2%cpt3cpjH8U");
 const usr = "jonteek";
 var dev_db_url = `mongodb+srv://${usr}:${pass}@cluster0.fepiv.gcp.mongodb.net/localLibrary?retryWrites=true&w=majority`;
-let mongoDB = process.env.MONGODB_URI || dev_db_url;
+let mongoDB = dev_db_url;
 var compression = require("compression");
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
